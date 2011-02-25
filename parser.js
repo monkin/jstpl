@@ -53,7 +53,7 @@ var parser_generator = function(fn) {
 		},
 		rep: function(r) {
 			var min_rep = arguments[1] || 0
-			var max_rep = arguments[1] || false
+			var max_rep = arguments[2] || false
 			return function(tree) {
 				var rl = rule(r)
 				tree.begin()

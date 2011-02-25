@@ -28,9 +28,11 @@ var parser = require("./parser").generate(function(bi) {
 				}
 			}
 			rule("index", named("index", and(/^\[/, mbs, "text_value", mbs, /^\]/)))
+			rule("filter", and(mbs, /^\|/, mbs, named("filter", and("name", rep(or(and(/^./, "name"), and(mbs, "index")))))))
 			var _var = and(maybe("name"),
 				rep(or(and(/^\./, "name"), and(mbs, "index"))),
-				maybe(named("call", and(mbs, arg_list(/^\(/, /^\)/), maybe(and(mbs, "block"))))));
+				maybe(named("call", and(mbs, arg_list(/^\(/, /^\)/), maybe(and(mbs, "block"))))),
+				rep("filter"));
 			rule("var", named("var", and(/^\$\{/, _var, /^\}/)))
 			rule("block", named("block", and(maybe(arg_list(/^\|/, /^\|/)), mbs, /^#/, and(rep(or("text", "comment", "var", "directive")), /^#end/))))
 			main_rule(rep(or("text", "comment", "var", "directive")))
