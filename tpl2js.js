@@ -19,7 +19,7 @@ var parser = require("./parser").generate(function(bi) {
 			rule("array", named("array", and(/^\[/, mbs, maybe(join("value", "space")), mbs, /^\]/)))
 			rule("hash", named("hash", and(/^\{/, mbs, maybe(join("pair", "space")), mbs, /^\}/)))
 			rule("text_value", or("name", "number", "var", "string", "directive"))
-			rule("value", or("name", "number", "var", "string", "directive", "array", "hash"))
+			rule("value", or("name", "number", "var", "string", "directive", "array", "hash", "simple_var"))
 			rule("pair", named("pair", and("text_value", mbs, /^:/ , mbs, "value")))
 			rule("directive", named("directive", and(/^@/, "name", mbs, /^\(/, mbs, named("file_name", /^"([^"\\]|\\[^])+"/), mbs, /^\)/)))
 			function arg_list(s, e) {
@@ -28,11 +28,13 @@ var parser = require("./parser").generate(function(bi) {
 				}
 			}
 			rule("index", named("index", and(/^\[/, mbs, "text_value", mbs, /^\]/)))
-			rule("filter", and(mbs, /^\|/, mbs, named("filter", and("name", rep(or(and(/^./, "name"), and(mbs, "index")))))))
+			
+			rule("filter", and(mbs, /^\|/, mbs, named("filter", "simple_var")))
 			var _var = and(maybe("name"),
 				rep(or(and(/^\./, "name"), and(mbs, "index"))),
 				maybe(named("call", and(mbs, arg_list(/^\(/, /^\)/), maybe(and(mbs, "block"))))),
 				rep("filter"));
+			rule("simple_var", named("var", and(/^\$/, maybe("name"), rep(or(and(/^./, "name"), and(mbs, "index"))))))
 			rule("var", named("var", and(/^\$\{/, _var, /^\}/)))
 			rule("block", named("block", and(maybe(arg_list(/^\|/, /^\|/)), mbs, /^#/, and(rep(or("text", "comment", "var", "directive")), /^#end/))))
 			main_rule(rep(or("text", "comment", "var", "directive")))
@@ -59,7 +61,7 @@ function parse_file(file_name) {
 		var c = nd.children || []
 		var r = "$ctx"
 		for(var i=0; i<c.length; i++)
-			if(c[i].name!='call')
+			if(c[i].name!='call' && c[i].name!='filter')
 				r = ["var_index(", r, ", ", val_node(c[i]), ")"].join("")
 		return r
 	}
@@ -106,10 +108,17 @@ function parse_file(file_name) {
 		} else if(nd.name=="index") {
 			return val_node(nd.children[0])
 		} else if(nd.name=="var") {
-			if(nd.children && nd.children[nd.children.length-1].name=="call")
-				return ["(function() {\nvar $out = [];\n", txt_node(nd), "return $out.join('');\n})()"].join("")
-			else
+			if(!nd.children)
+				return "$ctx"
+			else {
+				for(var i=0; i<nd.children.length; i++) {
+					var nm = nd.children[i].name
+					if(nm=="call" || nm=="filter") {
+						return ["(function() {\nvar $out = [];\n", txt_node(nd), "return $out.join('');\n})()"].join("")
+					}
+				}
 				return get_val(nd)
+			}	
 		} else if(nd.name=="directive") {
 			var c = nd.children
 			var nm = path.join(path.dirname(file_name), unescape_str(c[1].value().replace(/^"|"$/g, "")))
@@ -168,37 +177,63 @@ function parse_file(file_name) {
 			var nm = path.join(path.dirname(file_name), unescape_str(c[1].value().replace(/^"|"$/g, "")))
 			parse_file(nm)
 			return ["parsed[", JSON.stringify(nm), "]($ctx, $out);\n"].join("")
-		} else if(nd.name=="var" && nd.children && nd.children[nd.children.length-1].name=="call") {
+		} else if(nd.name=="var" && nd.children && (nd.children[nd.children.length-1].name=="call" || nd.children[nd.children.length-1].name=="filter")) {
 			var fn = get_val(nd)
-			var cl = nd.children[nd.children.length-1].children || []
-			var r = ["(function() {\nvar args = {};\n"]
-			if(cl.length>=1) {
-				var al = cl[0].children || []
-				for(var j=0; j<al.length; j++) {
-					if(al[j].name=="pair") {
-						r.push("args[")
-						r.push(val_node(al[j].children[0]))
-						r.push("] = ")
-						r.push(val_node(al[j].children[1]))
-						r.push(";\n")
+			var cl = []
+			var call_used = false
+			for(var i=0; i<nd.children.length; i++) {
+				if(nd.children[i].name=="call") {
+					cl = nd.children[i].children
+					call_used = true
+				}
+			}
+			var r = []
+			if(call_used) {
+				r = ["(function() {\nvar args = {};\n"]
+				if(cl.length>=1) {
+					var al = cl[0].children || []
+					for(var j=0; j<al.length; j++) {
+						if(al[j].name=="pair") {
+							r.push("args[")
+							r.push(val_node(al[j].children[0]))
+							r.push("] = ")
+							r.push(val_node(al[j].children[1]))
+							r.push(";\n")
+						} else {
+							r.push("args[")
+							r.push(j)
+							r.push("] = ")
+							r.push(val_node(al[j]))
+							r.push(";\n")
+						}
+					}
+				}
+				if(cl.length>=2) {
+					r.push("args['yield'] = ")
+					r.push(val_node(cl[1]))
+					r.push(";\n")
+				}
+				r.push("var_call(")
+				r.push(fn)
+				r.push(", $ctx, args, $out);\n})();\n")
+				r = r.join("")
+			} else
+				r = get_val(nd)
+			for(var i=0; i<nd.children.length; i++) {
+				if(nd.children[i].name=="filter") {
+					if(call_used) {
+						r = ["var_call(",
+							get_val(nd.children[i].children[0]),
+							", $ctx, [(function() {\nvar $out=[];\n", r, "return $out.join('');\n})()], $out);\n"].join("")
 					} else {
-						r.push("args[")
-						r.push(j)
-						r.push("] = ")
-						r.push(val_node(al[j]))
-						r.push(";\n")
+						call_used = true
+						r = ["var_call(",
+							get_val(nd.children[i].children[0]),
+							", $ctx, [", r, "], $out);\n"].join("")
 					}
 				}
 			}
-			if(cl.length>=2) {
-				r.push("args['yield'] = ")
-				r.push(val_node(cl[1]))
-				r.push(";\n")
-			}
-			r.push("var_call(")
-			r.push(fn)
-			r.push(", $ctx, args, $out);\n})();\n")
-			return r.join("")
+			return r
 		} else
 			return ["$out.push(", val_node(nd), ");\n"].join("")
 	}
