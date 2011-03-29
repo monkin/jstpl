@@ -139,24 +139,10 @@ function parse_file(file_name) {
 					for(var j=0; j<al.length; j++) {
 						if(al[j].name=="pair") {
 							var nm = val_node(al[j].children[0])
-							r.push("$ctx[")
-							r.push(nm)
-							r.push("] = $args[")
-							r.push(j)
-							r.push("] || $args[")
-							r.push(nm)
-							r.push("] || ")
-							r.push(val_node(al[j].children[1]))
-							r.push(";\n")
+							r.push("$ctx[" + nm + "] = $args[" + j + "]===undefined ? ($args[" + nm + "]===undefined ? " + val_node(al[j].children[1]) + " : $args[" + nm + "]) : $args[" + j + "];")
 						} else {
 							var nm = val_node(al[j])
-							r.push("$ctx[")
-							r.push(nm)
-							r.push("] = $args[")
-							r.push(j)
-							r.push("] || $args[")
-							r.push(nm)
-							r.push("];\n")
+							r.push("$ctx[" + nm + "] = $args[" + j + "]===undefined ? ($args[" + nm + "]===undefined ? null : $args[" + nm + "]) : $args[" + j + "];")
 						}
 					}
 				} else
