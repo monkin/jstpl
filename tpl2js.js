@@ -18,7 +18,7 @@ var parser = require("./parser").generate(function(bi) {
 						)), /^"/)))
 			rule("array", named("array", and(/^\[/, mbs, maybe(join("value", "space")), mbs, /^\]/)))
 			rule("hash", named("hash", and(/^\{/, mbs, maybe(join("pair", "space")), mbs, /^\}/)))
-			rule("text_value", or("name", "number", "var", "string", "directive"))
+			rule("text_value", or("name", "number", "var", "string", "directive", "simple_var"))
 			rule("value", or("name", "number", "var", "string", "directive", "array", "hash", "simple_var"))
 			rule("pair", named("pair", and("text_value", mbs, /^:/ , mbs, "value")))
 			rule("directive", named("directive", and(/^@/, "name", mbs, /^\(/, mbs, named("file_name", /^"([^"\\]|\\[^])+"/), mbs, /^\)/)))
