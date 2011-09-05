@@ -29,7 +29,7 @@ var parser = require("./parser").generate(function(bi) {
 			}
 			rule("index", named("index", and(/^\[/, mbs, "text_value", mbs, /^\]/)))
 			
-			rule("filter", and(mbs, /^\|/, mbs, named("filter", "simple_var")))
+			rule("filter", and(mbs, /^\|/, mbs, named("filter", named("var", and("name", rep(or(and(/^./, "name"), and(mbs, "index"))))))))
 			var _var = and(maybe("name"),
 				rep(or(and(/^\./, "name"), and(mbs, "index"))),
 				maybe(named("call", and(mbs, arg_list(/^\(/, /^\)/), maybe(and(mbs, "block"))))),
