@@ -27,7 +27,7 @@ var parser = require("./parser").generate(function(bi) {
 				}
 			}
 			rule("index", named("index", and(/^\[/, mbs, "text_value", mbs, /^\]/)))
-			
+
 			rule("filter", and(mbs, /^\|/, mbs, named("filter", named("var", and("name", rep(or(and(/^./, "name"), and(mbs, "index"))))))))
 			var _var = and(maybe("name"),
 				rep(or(and(/^\./, "name"), and(mbs, "index"))),
@@ -350,20 +350,54 @@ exports.compiler = function(file_loader) {
 			return compiler_object
 		},
 		create_source: function(function_name, callback) {
-			var r = ["function ", fn_name, "(file_name, ctx) {\n"]
-			
+			var r = ["function ", function_name, "(file_name, ctx) {\n"]
 			r.push("function context() { if(arguments.length) { var rfn = function(){}; rfn.prototype = arguments[0]; return new rfn(); } else return {}; };\n")
 			r.push("function var_index(v, i) { return v ? v[i] : null; };\n")
 			r.push("function var_call(v, ctx, args, out) { if(v && typeof v=='function') v(ctx, args, out); };\n")
 			r.push("var $ctx = context(ctx);\n")
-			
 			get_plugins(function(data, err) {
-			
-			})
+				if(err)
+					cb(err, null)
+				else {
+					// plugins
+					r.push(data)
 
+					// includes
+					r.push("\nvar includes = ")
+					r.push(JSON.stringify(includes))
+					r.push(";\n")
+
+					// parsed files
+					r.push("var parsed = {\n")
+					var fst = true
+					for(var i in parsed) {
+						if(!fst)
+							r.push(",\n")
+						fst = false
+						r.push(JSON.stringify(i))
+						r.push(": ")
+						r.push(parsed[i])
+					}
+					r.push("\n};\n")
+
+					// apply template
+					r.push("if(!parsed[file_name])\nthrow new Error('File not found: \"' + file_name + '\"');\n")
+					r.push("var $out = [];\n")
+					r.push("parsed[file_name]($ctx, $out);\n")
+					r.push("return $out.join('');\n")
+					r.push("}\n")
+					cb(null, r.join(""))
+				}
+			})
 		},
 		create_function: function(callback) {
-			
+			compiler_object.create_source("", function(err, source) {
+				try {
+					callback(err, err ? null : eval(["(", source, ")"].join("")))
+				} catch(e) {
+					callback(e, null)
+				}
+			})
 		}
 	}
 }
@@ -371,7 +405,6 @@ exports.compiler = function(file_loader) {
 var out = function(s) {
 		process.stdout.write(s)
 	}
-var fn_name = "tpl2js"
 
 for(var i=2; i<process.argv.length; i++) {
 	if(process.argv[i]=="-o") {
@@ -388,32 +421,4 @@ for(var i=2; i<process.argv.length; i++) {
 		parse_file(process.argv[i])
 }
 
-
-
-get_plugins(path.join(__dirname, "plugins"))
-
-r.push("var includes = ")
-r.push(JSON.stringify(includes))
-r.push(";\n")
-
-r.push("var parsed = {\n")
-var fst = true
-for(var i in parsed) {
-	if(!fst)
-		r.push(",\n")
-	fst = false
-	r.push(JSON.stringify(i))
-	r.push(": ")
-	r.push(parsed[i])
-}
-r.push("\n};\n")
-
-r.push("if(!parsed[file_name])\nthrow new Error('File not found: \"' + file_name + '\"');\n")
-r.push("var $out = [];\n")
-r.push("parsed[file_name]($ctx, $out);\n")
-r.push("return $out.join('');\n")
-r.push("}\n")
-
-if(r.length)
-	out(r.join(""))
 
