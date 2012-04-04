@@ -402,23 +402,6 @@ exports.compiler = function(file_loader) {
 	}
 }
 
-var out = function(s) {
-		process.stdout.write(s)
-	}
 
-for(var i=2; i<process.argv.length; i++) {
-	if(process.argv[i]=="-o") {
-		i++
-		out = (function(fname) {
-				return function(s) {
-						fs.writeFileSync(fname, s)
-					}
-			})(process.argv[i])
-	} else if(process.argv[i]=="-fn") {
-		i++;
-		fn_name = process.argv[i]
-	} else
-		parse_file(process.argv[i])
-}
 
 

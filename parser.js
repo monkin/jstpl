@@ -18,7 +18,6 @@ var parser_generator = function(fn) {
 			return x
 		else
 			throw new Error(JSON.stringify(x) + " - is not a rule")
-		
 	}
 	var build_interface = {
 		main_rule: function(mr) {
