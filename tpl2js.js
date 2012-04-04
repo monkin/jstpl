@@ -3,7 +3,6 @@
 var fs = require("fs")
 var path = require("path")
 
-
 var parser = require("./parser").generate(function(bi) {
 		with(bi) {
 			var mbs = maybe("space")
@@ -41,17 +40,7 @@ var parser = require("./parser").generate(function(bi) {
 		}
 	})
 
-var includes = {}
-var parsed = {}
-
-function include_file(file_name) {
-	if(!includes[file_name])
-		includes[file_name] = fs.readFileSync(file_name).toString("UTF-8")
-}
-
-function parse_file(file_name) {
-	if(parsed[file_name])
-		return;
+function parse_string(string, include_fn, parse_fn) {
 	function unescape_str(str) {
 		return str.replace(/\\[^]/g, function(m) {
 				return m.substring(1, 2)
@@ -123,10 +112,10 @@ function parse_file(file_name) {
 			var c = nd.children
 			var nm = path.join(path.dirname(file_name), unescape_str(c[1].value().replace(/^"|"$/g, "")))
 			if(c[0].value()=="include") {
-				include_file(nm)
+				include_fn(nm)
 				return ["includes[", JSON.stringify(nm), "]"].join("")
 			} else if(c[0].value()=="parse") {
-				parse_file(nm)
+				parse_fn(nm)
 				return ["(function() {\nvar $out = [];\nparsed[", JSON.stringify(nm), "]($ctx, $out);\nreturn $out.join('');\n})()"].join("")
 			} else
 				throw new Error("Unknown directive: " + JSON.stringify())
@@ -223,13 +212,160 @@ function parse_file(file_name) {
 		} else
 			return ["$out.push(", val_node(nd), ");\n"].join("")
 	}
-	var tree = null
-	try {
-		tree = parser(fs.readFileSync(file_name).toString("UTF-8"))
-	} catch(e) {
-		throw new Error(file_name + e.message)
+	return "function($ctx, $out) {\n" + txt_node(parser(string)) + "}\n"
+}
+
+
+function load_plugins(pa, dir, callback) {
+	var r = []
+	var events_count = 0
+	function dec_counter(err) {
+		events_count--
+		if(callback && (err || events_count<=0)) {
+			callback(err ? null : r.join(""), err)
+			callback = null
+		}
 	}
-	parsed[file_name] = "function($ctx, $out) {\n" + txt_node(tree) + "}\n"
+	function push_path(p) {
+		r.push("$ctx")
+		for(var i=0; i<p.length; i++)
+			r.push("[" + JSON.stringify(p[i]) + "]");
+		r.push(" = ")
+	}
+	fs.readdir(path, function(err, files) {
+		if(err)
+			dec_counter(err)
+		else {
+			events_count = files.length
+			for(var i=0; i<files.length; i++) {
+				(function(file) {
+					if(file==="." || file==="..")
+						dec_counter(false)
+					else {
+						fs.stat(path.join(dir, file), function(err, stat) {
+							if(err)
+								dec_counter(err)
+							else if(stat.isDirectory()) {
+								load_plugins(pa.concat([file]), path.join(dir, file), function(data, err) {
+									r.push(data)
+									dec_counter(err)
+								})
+							} else {
+								fs.readFile(file, "UTF-8", function(err, data) {
+									if(err)
+										dec_counter(err)
+									else {
+										push_path(pa.concat([file.replace(/\.js$/i, "")]))
+										r.push(data)
+										r.push(";\n")
+										dec_counter(false)
+									}
+								})
+							}
+						})
+					}
+				})(files[i])
+			}
+		}
+	})
+}
+
+var get_plugins = function(cb) {
+	var plugins = null
+	load_plugins([], path.join(__dirname, "plugins"), function(data, err) {
+		if(!err) {
+			get_plugins = function(cb2) {
+				cb2(data, err)
+			}
+		}
+		cb(data, err)
+	})
+}
+
+exports.file_loader = function(root_path) {
+	if(!root_path)
+		root_path = "./"
+	else if(!/\/$/.match(root_path))
+		root_path += "/"
+	return function(file_name, callback) {
+		fs.readFile(root_path + file_name, "UTF-8", callback)
+	}
+}
+
+exports.compiler = function(file_loader) {
+	if(!file_loader)
+		file_loader = exports.file_loader()
+	var includes = {}
+	var parsed = {}
+	var compiler_object = {
+		include: function(file_name, callback) {
+			if(includes[file_name])
+				callback(false, compiler_object)
+			else {
+				includes[file_name] = true
+				file_loader(file_name, function(err, data) {
+					if(err)
+						callback(err, compiler_object)
+					else {
+						includes[file_name] = data
+						callback(false, compiler_object)
+					}
+				})
+			}
+			return compiler_object
+		},
+		parse: function(file_name, callback) {
+			if(parsed[file_name])
+				callback(false, compiler_object)
+			else {
+				parsed[file_name] = true
+				file_loader(file_name, function(err, data) {
+					var events_count = 1
+					var finished = false
+					function cb(err) {
+						if(!finished) {
+							callback(err, compiler_object)
+							finished = true
+						}
+					}
+					function dec_events(err) {
+						events_count--
+						if(err || events_count<=0)
+							cb(err)
+					}
+					try {
+						parsed[file_name] = parse_string(data, function(fname) {
+							events_count++
+							compiler_object.include(fname, dec_events)
+						}, function(fname) {
+							events_count++
+							compiler_object.parse(fname, dec_events)
+						})
+					} catch(e) {
+						dec_events(e)
+					}
+					dec_events(false)
+				})
+			}
+			return compiler_object
+		},
+		create_source: function(function_name, callback) {
+			var r = ["function ", fn_name, "(file_name, ctx) {\n"]
+			
+			r.push("function context() { if(arguments.length) { var rfn = function(){}; rfn.prototype = arguments[0]; return new rfn(); } else return {}; };\n")
+			r.push("function var_index(v, i) { return v ? v[i] : null; };\n")
+			r.push("function var_call(v, ctx, args, out) { if(v && typeof v=='function') v(ctx, args, out); };\n")
+			r.push("var $ctx = context(ctx);\n")
+			
+			get_plugins(function(data, err) {
+			
+			})
+
+		},
+		create_function: function(callback) {
+			
+		}
+	}
 }
 
 var out = function(s) {
@@ -252,43 +388,7 @@ for(var i=2; i<process.argv.length; i++) {
 		parse_file(process.argv[i])
 }
 
-var r = ["function ", fn_name, "(file_name, ctx) {\n"]
 
-r.push("function context() { if(arguments.length) { var rfn = function(){}; rfn.prototype = arguments[0]; return new rfn(); } else return {}; };\n")
-r.push("function var_index(v, i) { return v ? v[i] : null; };\n")
-r.push("function var_call(v, ctx, args, out) { if(v && typeof v=='function') v(ctx, args, out); };\n")
-
-r.push("var $ctx = context(ctx);\n")
-
-function get_plugins(dir) {
-	var p = arguments[1] || []
-	var plugins = fs.readdirSync(dir)
-	function pth(px) {
-		for(var j in px) {
-			r.push("[")
-			r.push(JSON.stringify(px[j]))
-			r.push("]")
-		}
-	}
-	for(var i in plugins) {
-		var nm = path.join(dir, plugins[i])
-		if(nm==".." || nm==".") {
-			//skip
-		} else if(fs.statSync(nm).isDirectory()) {
-			var np = p.concat([plugins[i]])
-			r.push("$ctx")
-			pth(np)
-			r.push(" = {};\n")
-			get_plugins(nm, np)
-		} else {
-			r.push("$ctx")
-			pth(p.concat([plugins[i].replace(/\.js$/, "")]))
-			r.push(" = ")
-			r.push(fs.readFileSync(nm))
-			r.push(";\n")
-		}
-	}
-}
 
 get_plugins(path.join(__dirname, "plugins"))
 
