@@ -40,7 +40,7 @@ var parser = require("./parser").generate(function(bi) {
 		}
 	})
 
-function parse_string(string, include_fn, parse_fn) {
+function parse_string(file_name, string, include_fn, parse_fn) {
 	function unescape_str(str) {
 		return str.replace(/\\[^]/g, function(m) {
 				return m.substring(1, 2)
@@ -232,7 +232,7 @@ function load_plugins(pa, dir, callback) {
 			r.push("[" + JSON.stringify(p[i]) + "]");
 		r.push(" = ")
 	}
-	fs.readdir(path, function(err, files) {
+	fs.readdir(dir, function(err, files) {
 		if(err)
 			dec_counter(err)
 		else {
@@ -251,7 +251,7 @@ function load_plugins(pa, dir, callback) {
 									dec_counter(err)
 								})
 							} else {
-								fs.readFile(file, "UTF-8", function(err, data) {
+								fs.readFile(path.join(dir, file), "UTF-8", function(err, data) {
 									if(err)
 										dec_counter(err)
 									else {
@@ -334,7 +334,7 @@ exports.compiler = function(file_loader) {
 							cb(err)
 					}
 					try {
-						parsed[file_name] = parse_string(data, function(fname) {
+						parsed[file_name] = parse_string(file_name, data, function(fname) {
 							events_count++
 							compiler_object.include(fname, dec_events)
 						}, function(fname) {
@@ -357,7 +357,7 @@ exports.compiler = function(file_loader) {
 			r.push("var $ctx = context(ctx);\n")
 			get_plugins(function(data, err) {
 				if(err)
-					cb(err, null)
+					callback(err, null)
 				else {
 					// plugins
 					r.push(data)
@@ -386,7 +386,7 @@ exports.compiler = function(file_loader) {
 					r.push("parsed[file_name]($ctx, $out);\n")
 					r.push("return $out.join('');\n")
 					r.push("}\n")
-					cb(null, r.join(""))
+					callback(null, r.join(""))
 				}
 			})
 		},
@@ -400,6 +400,7 @@ exports.compiler = function(file_loader) {
 			})
 		}
 	}
+	return compiler_object
 }
 
 

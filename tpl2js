@@ -17,7 +17,7 @@ function dec_counter(err) {
 	if(!is_fail) {
 		events_count--
 		if(events_count<=0) {
-			compiler.create_source(function(err, source) {
+			compiler.create_source(fn_name, function(err, source) {
 				if(err)
 					throw err
 				else
