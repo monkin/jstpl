@@ -1,5 +1,5 @@
 {
-  "name" : "tpl2js",
+  "name" : "js_tpl",
   "description" : "Velocity-like templates engine",
   "url" : "https://github.com/monkin/tpl2js",
   "keywords" : ["template", "tpl2js"],
