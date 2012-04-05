@@ -11,7 +11,7 @@
   "contributors" : [],
   "version" : "1.0.0",
   "bin" : { "tpl2js": "./tpl2js" },
-  "main" : "./compiler",
+  "main" : "./lib/compiler",
   "directories" : { "plugins": "./plugins", "lib": "./lib" },
   "engines" : { "node": ">=0.4.0" }
 }
