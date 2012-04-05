@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var compiler = require("./compiler").compiler()
+var compiler = require("tpl2js").compiler()
 var fn_name = "tpl2js"
 
 var out = function(s) {
