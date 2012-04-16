@@ -2,7 +2,7 @@
 
 ## Using
 
-	tpj2js.js [-fn function_name] [-o output_file.js] template1.tpl template2.tpl template3.tpl ...
+	tpj2js [-fn function_name] [-o output_file.js] template1.tpl template2.tpl template3.tpl ...
 
 ## Options
 
@@ -21,7 +21,7 @@
 
 ### compile:
 
-	tpj2js.js -o books_tpl.js books.tpl
+	tpj2js -o books_tpl.js books.tpl
 
 ### use.js:
 
