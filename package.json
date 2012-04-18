@@ -1,0 +1,17 @@
+{
+  "name" : "js_tpl",
+  "description" : "Velocity-like templates engine",
+  "url" : "https://github.com/monkin/tpl2js",
+  "keywords" : ["template", "tpl2js"],
+  "author" : "Andrey Monkin <monkin.andrey@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/monkin/tpl2js.git"
+  },
+  "contributors" : [],
+  "version" : "1.0.1",
+  "bin" : { "tpl2js": "./tpl2js" },
+  "main" : "./lib/compiler",
+  "directories" : { "plugins": "./plugins", "lib": "./lib" },
+  "engines" : { "node": ">=0.4.0" }
+}

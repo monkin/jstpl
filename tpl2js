@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var compiler = require("./compiler").compiler()
+var compiler = require("js_tpl").compiler()
 var fn_name = "tpl2js"
 
 var out = function(s) {
@@ -17,7 +17,7 @@ function dec_counter(err) {
 	if(!is_fail) {
 		events_count--
 		if(events_count<=0) {
-			compiler.create_source(function(err, source) {
+			compiler.create_source(fn_name, function(err, source) {
 				if(err)
 					throw err
 				else
