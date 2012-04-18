@@ -285,7 +285,7 @@ var get_plugins = function(cb) {
 exports.file_loader = function(root_path) {
 	if(!root_path)
 		root_path = "./"
-	else if(!/\/$/.match(root_path))
+	else if(!/\/$/.test(root_path))
 		root_path += "/"
 	return function(file_name, callback) {
 		fs.readFile(root_path + file_name, "UTF-8", callback)
