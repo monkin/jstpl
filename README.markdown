@@ -2,7 +2,7 @@
 
 ## Using
 
-	tpj2js [-fn function_name] [-o output_file.js] template1.tpl template2.tpl template3.tpl ...
+	tpl2js [-fn function_name] [-o output_file.js] template1.tpl template2.tpl template3.tpl ...
 
 ## Options
 
