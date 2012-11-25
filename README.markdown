@@ -14,9 +14,9 @@
 ### books.tpl:
 	
 	<div class="book_list">
-		${foreach($books) |b| #
-			<a href="/book/${b.id|utils.html.escape}">${b.name|utils.html.escape}</a>
-		#end}
+		$foreach($books) |b| {
+			<a href="/book/$b.id|utils.html.escape">$b.name|utils.html.escape</a>
+		}
 	</div>
 
 ### compile:
@@ -38,31 +38,31 @@
 		\# \$ \\ \" - escaping
 	*#
 	
-	${title} ## Insert variable value
-	${test_fn($test 1 "Заголовок: ${title}")} ## Function call
+	$title ## Insert variable value
+	$test_fn($test 1 "Заголовок: $title") ## Function call
 	
 	## Call  function with two arguments: first - array, second - hash
-	${test_fn2([1 2 $title "str"] {
-			color: "red"
-			name: "Test"
-			"${title}": "Title"
-		})
+	$test_fn2([1 2 $title "str"] {
+		color: "red"
+		name: "Test"
+		"$title": "Title"
+	})
 	
 	## Call function "if" with argument and block. (see "plugins" dir)
-	${if($title) #
-		<div>${title}</div>
-	#end}
+	$if($title) {
+		<div>$title</div>
+	}
 	
 	## Create macro (user function).
 	## Second and thrid arguments have default values.
-	${lambda(my_fn) |arg1 arg2:"None" id:${utils.id()}| #
-		<div id="${id}" class="${arg1}">${arg2}</div>
-	#end}
+	$lambda(my_fn) |arg1 arg2:"None" id:$utils.id()| {
+		<div id="$id" class="$arg1">$arg2</div>
+	}
 	
 	## Call my_fn.
 	## Argument "id" passed by name.
-	${my_fn("cl" id:"my_id")}
+	$my_fn("cl" id:"my_id")
 	
-	${str_fn()|utils.html.escape} ## Equals ${utils.html.escape(${str_fn()})}
+	$str_fn()|utils.html.escape ## Equals $utils.html.escape($str_fn())
 	
 	## See "plugins" directory for plugin examples.
