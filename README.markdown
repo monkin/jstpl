@@ -39,12 +39,12 @@
 	*#
 	
 	$title ## Insert variable value
-	$test_fn($test 1 "Заголовок: $title") ## Function call
+	$test_fn($test, 1, "Заголовок: $title") ## Function call
 	
 	## Call  function with two arguments: first - array, second - hash
-	$test_fn2([1 2 $title "str"] {
-		color: "red"
-		name: "Test"
+	$test_fn2([1, 2, $title, "str"] {
+		color: "red",
+		name: "Test",
 		"$title": "Title"
 	})
 	
@@ -55,13 +55,13 @@
 	
 	## Create macro (user function).
 	## Second and thrid arguments have default values.
-	$lambda(my_fn) |arg1 arg2:"None" id:$utils.id()| {
+	$lambda(my_fn) |arg1, arg2:"None", id:$utils.id()| {
 		<div id="$id" class="$arg1">$arg2</div>
 	}
 	
 	## Call my_fn.
 	## Argument "id" passed by name.
-	$my_fn("cl" id:"my_id")
+	$my_fn("cl", id:"my_id")
 	
 	$str_fn()|utils.html.escape ## Equals $utils.html.escape($str_fn())
 	
