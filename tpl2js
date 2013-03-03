@@ -1,47 +1,27 @@
 #!/usr/bin/env node
 
-var fs = require("fs");
-var compiler = require("js_tpl").compiler()
-var fn_name = "tpl2js"
+var fs = require("fs"),
+	compiler = require("js_tpl").compiler(), //require("js_tpl").compiler(),
+	argv = require('optimist')["default"]({"function": "tpl2js"}).argv,
+	out = function(s) { process.stdout.write(s) };
 
-var out = function(s) {
-		process.stdout.write(s)
+if(argv.out) {
+	out = function(s) {
+		fs.writeFileSync(argv.out, s)
 	}
+}
 
-var events_count = 1
-var is_fail = false
-function dec_counter(err) {
-	if(err) {
-		is_fail = true
+if(argv.plugins != "no") {
+	compiler.loadDefaultPlugins()
+}
+
+for(var i in argv._)
+	compiler.parseFile(argv._[i])
+
+compiler.getCode(function(err, code) {
+	if(err)
 		throw err
-	}
-	if(!is_fail) {
-		events_count--
-		if(events_count<=0) {
-			compiler.create_source(fn_name, function(err, source) {
-				if(err)
-					throw err
-				else
-					out(source)
-			})
-		}
-	}
-}
+	else
+		out("var " + argv.function + " = " + code + ";")
+})
 
-for(var i=2; i<process.argv.length; i++) {
-	if(process.argv[i]=="-o") {
-		i++
-		out = (function(fname) {
-				return function(s) {
-						fs.writeFileSync(fname, s)
-					}
-			})(process.argv[i])
-	} else if(process.argv[i]=="-fn") {
-		i++
-		fn_name = process.argv[i]
-	} else {
-		events_count++
-		compiler.parse(process.argv[i], dec_counter)
-	}
-	dec_counter(false)
-}

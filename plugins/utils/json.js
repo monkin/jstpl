@@ -1,10 +1,13 @@
 {
-	stringify: function($ctx, $args, $out) {
-		if($args[0])
-			$out.push(JSON.stringify($args[0]))
+	stringify: function($ctx, $args) {
+		return JSON.stringify($args['0'])
 	},
-	parse: function($ctx, $args, $out) {
-		if($args[0] && $args.yield)
-			$args.yield($ctx, [JSON.parse($args[0])], $out)
+	parse: function($ctx, $args) {
+		if($args["0"] && $args["yield"])
+			return $args["yield"]($ctx, {"0": JSON.parse($args["0"])})
+		else if($args["0"])
+			return JSON.parse($args["0"])
+		else
+			return "#utils.json.parse#"
 	}
 }

@@ -1,8 +1,8 @@
 {
-	upcase: function($ctx, $args, $out) {
-		$out.push(($args[0] || "").toUpperCase());
+	upcase: function($ctx, $args) {
+		return ($args["0"] || "").toUpperCase();
 	},
-	downcase: function($ctx, $args, $out) {
-		$out.push(($args[0] || "").toLowerCase());
+	downcase: function($ctx, $args) {
+		return ($args["0"] || "").toLowerCase();
 	}
 }

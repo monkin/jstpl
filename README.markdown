@@ -2,12 +2,13 @@
 
 ## Using
 
-	tpl2js [-fn function_name] [-o output_file.js] template1.tpl template2.tpl template3.tpl ...
+	tpl2js [--function=function_name] [--out=output_file.js] [--plugins=no] template1.tpl template2.tpl template3.tpl ...
 
 ## Options
 
-* -o - output file (stdout by default)
-* -fn - function name (tpl2js by default)
+* --out - output file (stdout by default)
+* --function - function name (tpl2js by default)
+* --plugins - yes|no use or don't use default plugins
 
 ## Example
 

@@ -9,9 +9,10 @@
     "url": "git://github.com/monkin/tpl2js.git"
   },
   "contributors" : [],
-  "version" : "1.0.6",
+  "version" : "1.1.6",
   "bin" : { "tpl2js": "./tpl2js" },
   "main" : "./lib/compiler",
   "directories" : { "plugins": "./plugins", "lib": "./lib" },
-  "engines" : { "node": ">=0.4.0" }
+  "engines" : { "node": ">=0.4.0" },
+  "dependencies": { "optimist": ">=0.3.5" }
 }

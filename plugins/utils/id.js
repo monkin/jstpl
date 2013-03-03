@@ -1,3 +1,3 @@
-function($ctx, $args, $out) {
-	$out.push(["id", new Date().getTime().toString(), Math.random().toString().replace(/\./g, "")].join("_"))
+function($ctx, $args) {
+	return ["id", new Date().getTime().toString(), Math.random().toString().replace(/\./g, "")].join("_")
 }
