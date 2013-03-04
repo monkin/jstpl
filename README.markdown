@@ -2,12 +2,12 @@
 
 ## Using
 
-	tpl2js [--function=function_name] [--out=output_file.js] [--plugins=no] template1.tpl template2.tpl template3.tpl ...
+	jstpl [--function=function_name] [--out=output_file.js] [--plugins=no] template1.tpl template2.tpl template3.tpl ...
 
 ## Options
 
 * --out - output file (stdout by default)
-* --function - function name (tpl2js by default)
+* --function - function name (jstpl by default)
 * --plugins - yes|no use or don't use default plugins
 
 ## Example
@@ -15,14 +15,14 @@
 ### books.tpl:
 	
 	<div class="book_list">
-		$foreach($books) |b| {
+		$each($books) |b| {
 			<a href="/book/$b.id|utils.html.escape">$b.name|utils.html.escape</a>
 		}
 	</div>
 
-### compile:
+### compile.sh:
 
-	tpj2js -o books_tpl.js books.tpl
+	jstpl -o books_tpl.js books.tpl
 
 ### use.js:
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 var fs = require("fs"),
-	compiler = require("js_tpl").compiler(), //require("js_tpl").compiler(),
-	argv = require('optimist')["default"]({"function": "tpl2js"}).argv,
+	compiler = require("jstpl").compiler(),
+	argv = require('optimist')["default"]({"function": "jstpl"}).argv,
 	out = function(s) { process.stdout.write(s) };
 
 if(argv.out) {
@@ -12,11 +12,11 @@ if(argv.out) {
 }
 
 if(argv.plugins != "no") {
-	compiler.loadDefaultPlugins()
+	compiler.loadPlugins()
 }
 
 for(var i in argv._)
-	compiler.parseFile(argv._[i])
+	compiler.parse(argv._[i])
 
 compiler.getCode(function(err, code) {
 	if(err)

@@ -1,18 +1,18 @@
 {
-  "name" : "js_tpl",
-  "description" : "Velocity-like templates engine",
-  "url" : "https://github.com/monkin/tpl2js",
-  "keywords" : ["template", "tpl2js"],
-  "author" : "Andrey Monkin <monkin.andrey@gmail.com>",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/monkin/tpl2js.git"
-  },
-  "contributors" : [],
-  "version" : "1.1.6",
-  "bin" : { "tpl2js": "./tpl2js" },
-  "main" : "./lib/compiler",
-  "directories" : { "plugins": "./plugins", "lib": "./lib" },
-  "engines" : { "node": ">=0.4.0" },
-  "dependencies": { "optimist": ">=0.3.5" }
+	"name" : "jstpl",
+	"description" : "Template engine inspired by Apache Velocity",
+	"url" : "https://github.com/monkin/tpl2js",
+	"keywords" : ["template", "jstpl"],
+	"author" : "Andrey Monkin <monkin.andrey@gmail.com>",
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/monkin/tpl2js.git"
+	},
+	"contributors" : [],
+	"version" : "1.1.0",
+	"bin" : { "jstpl": "./jstpl" },
+	"main" : "./lib/compiler",
+	"directories" : { "plugins": "./plugins", "lib": "./lib" },
+	"engines" : { "node": ">=0.4.0" },
+	"dependencies": { "optimist": ">=0.3.5" }
 }
