@@ -1,12 +1,12 @@
 {
 	"name" : "jstpl",
 	"description" : "Template engine inspired by Apache Velocity",
-	"url" : "https://github.com/monkin/tpl2js",
+	"url" : "https://github.com/monkin/jstpl",
 	"keywords" : ["template", "jstpl"],
 	"author" : "Andrey Monkin <monkin.andrey@gmail.com>",
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/monkin/tpl2js.git"
+		"url": "git://github.com/monkin/jstpl.git"
 	},
 	"contributors" : [],
 	"version" : "1.1.0",

@@ -1,6 +1,25 @@
 # JS templates compiler.
 
-## Using
+## Instalation
+
+	npm install jstpl
+
+## Using from code
+
+	var jstpl = require("jstpl"),
+		loader = jstpl.fileLoader("./path/to/templates"),
+		compiler = jstpl.compiler(loader);
+	compiler.loadPlugins();
+	compiler.parse("firstFile.tpl");
+	compiler.parse("secondFile.tpl");
+	compiler.getCode(function(error, code) {
+		// code - compiled template
+	});
+	compiler.getFunction(function(error, fn) {
+		var out = fn("firstFile.tpl", {arg1: 12, arg2: "test"});
+	});
+
+## Using from command line
 
 	jstpl [--function=function_name] [--out=output_file.js] [--plugins=no] template1.tpl template2.tpl template3.tpl ...
 
@@ -22,13 +41,13 @@
 
 ### compile.sh:
 
-	jstpl -o books_tpl.js books.tpl
+	jstpl --out=books.tpl.js books.tpl
 
 ### use.js:
 
 	...
 	var books = [{ id: 1, name: "Игра в классики" }, { id: 1, name: "Игра в биссер" }]
-	var books_html = tpl2js("books.tpl", { books: books })
+	var books_html = jstpl("books.tpl", { books: books })
 	...
 
 ## Syntax
